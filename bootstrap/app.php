@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\RequestIdMiddleware;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Cookie\Middleware\EncryptCookies as BaseEncryptCookies;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        /**
+         * Add request ID middleware early in the stack for telemetry and logging.
+         */
+        $middleware->prepend(RequestIdMiddleware::class);
+
         /**
          * Remove the default Laravel middleware that prevents requests during maintenance mode. There are three
          * middlewares in the shop that need to be loaded before this middleware. Therefore, we need to remove this

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Logging\ConsoleTelemetryHandler;
+use App\Logging\QueueTelemetryProcessor;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\ParallelTesting;
@@ -15,6 +17,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Load logging helper functions
+        require_once app_path('Logging/helpers.php');
+
         $allowedIPs = array_map('trim', explode(',', config('app.debug_allowed_ips')));
 
         $allowedIPs = array_filter($allowedIPs);
@@ -38,5 +43,11 @@ class AppServiceProvider extends ServiceProvider
         ParallelTesting::setUpTestDatabase(function (string $database, int $token) {
             Artisan::call('db:seed');
         });
+
+        // Register queue telemetry processor
+        QueueTelemetryProcessor::register();
+
+        // Register console telemetry handler
+        ConsoleTelemetryHandler::register();
     }
 }

@@ -22,6 +22,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Telemetry Enabled Channels
+    |--------------------------------------------------------------------------
+    |
+    | This option defines which log channels should have telemetry context
+    | (request ID, user ID, session ID, trace ID) automatically added to
+    | their log entries.
+    |
+    */
+
+    'telemetry_enabled_channels' => explode(',', env('LOG_TELEMETRY_CHANNELS', 'single,daily,stack')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Deprecations Log Channel
     |--------------------------------------------------------------------------
     |
@@ -125,6 +138,21 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        'json' => [
+            'driver' => 'json',
+            'path' => storage_path('logs/laravel-json.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'name' => 'json',
+        ],
+
+        'json_daily' => [
+            'driver' => 'json_daily',
+            'path' => storage_path('logs/laravel-json.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'name' => 'json_daily',
         ],
 
     ],
