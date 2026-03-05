@@ -5,12 +5,19 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+# Optimize runner allocation by cancelling outdated workflow runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pint_tests:
     runs-on: ${{ matrix.operating-systems }}
+    timeout-minutes: 10
 
     strategy:
       matrix:
+        # Lightweight runner for code style checks
         operating-systems: [ubuntu-latest]
         php-versions: ['8.3']
 
