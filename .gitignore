@@ -28,5 +28,23 @@ package-lock.json
 /vendor
 yarn.lock
 yarn-error.log
-/test-results
-/playwright-report
+
+# Laravel runtime / cache
+/bootstrap/cache/*.php
+/storage/logs/*.log
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/debugbar/
+
+# Vite
+vite.config.js.timestamp-*
+
+# npm
+npm-debug.log*
+.npm/
+
+# OS artifacts
+Thumbs.db
+ehthumbs.db
+Desktop.ini
