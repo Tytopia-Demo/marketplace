@@ -5,12 +5,19 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+# Optimize runner allocation by cancelling outdated workflow runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pest_tests:
     runs-on: ${{ matrix.operating-systems }}
+    timeout-minutes: 30
 
     strategy:
       matrix:
+        # Standard 2-core runner suitable for unit/feature tests
         operating-systems: [ubuntu-latest]
         php-versions: ['8.3']
 
@@ -55,5 +62,21 @@ jobs:
       - name: Running Bagisto Installer
         run: php artisan bagisto:install --skip-env-check --skip-admin-creation --skip-github-star
 
+      - name: Resource Monitoring - Before Tests
+        run: |
+          echo "=== Resource Usage Before Tests ==="
+          echo "CPU Cores: $(nproc)"
+          echo "Memory Info:"
+          free -h
+          echo "Start Time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
       - name: Running Pest Test
         run: vendor/bin/pest --colors=always
+
+      - name: Resource Monitoring - After Tests
+        if: always()
+        run: |
+          echo "=== Resource Usage After Tests ==="
+          echo "Memory Info:"
+          free -h
+          echo "End Time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"

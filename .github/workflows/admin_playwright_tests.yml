@@ -5,17 +5,24 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+# Optimize runner allocation by cancelling outdated workflow runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FORCE_COLOR: 1
 
 jobs:
   admin_playwright_test:
     runs-on: ${{ matrix.operating-systems }}
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
       matrix:
-        operating-systems: [ubuntu-latest]
+        # Use 4-core runners for Playwright tests (CPU/memory intensive workload)
+        operating-systems: [ubuntu-latest-4-core]
         php-versions: ['8.3']
         node-version: ['22.13.1']
         shard-index: [1,2,3,4,5,6]
@@ -87,12 +94,34 @@ jobs:
           echo "Waiting for server to start..."
           timeout 30 bash -c 'until curl -s http://127.0.0.1:8000 > /dev/null; do sleep 1; done'
 
+      - name: Resource Monitoring - Before Tests
+        run: |
+          echo "=== Resource Usage Before Tests ==="
+          echo "CPU Info:"
+          nproc
+          lscpu | grep "Model name"
+          echo "Memory Info:"
+          free -h
+          echo "Disk Info:"
+          df -h
+          echo "Start Time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
       - name: Run All Playwright Tests
         env:
           BASE_URL: 'http://127.0.0.1:8000'
         run: |
           npx playwright test --config=tests/e2e-pw/playwright.config.ts --shard=${{ matrix.shard-index }}/${{ matrix.shard-total }}
         working-directory: packages/Webkul/Admin
+
+      - name: Resource Monitoring - After Tests
+        if: always()
+        run: |
+          echo "=== Resource Usage After Tests ==="
+          echo "Memory Info:"
+          free -h
+          echo "Disk Info:"
+          df -h
+          echo "End Time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
